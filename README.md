@@ -1,6 +1,7 @@
 # 🌅 Adaptive Timetable System — Mission Log
 
-> **Live Application Deployed At:** [https://sahmo.github.io/adaptive-timetable/](https://sahmo.github.io/adaptive-timetable/) (Replace with your actual GitHub Pages deployment URL)
+> **Live Application Deployed At:** [https://raunak2008sah-code.github.io/Personal-timetable-/](https://raunak2008sah-code.github.io/Personal-timetable-/)
+> **GitHub Repository:** [https://github.com/raunak2008sah-code/Personal-timetable-.git](https://github.com/raunak2008sah-code/Personal-timetable-.git)
 
 ## 1. What This Is & Who It's For
 
