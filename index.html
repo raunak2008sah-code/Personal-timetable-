@@ -169,10 +169,13 @@
     .quad-desc { font-family: var(--font-body); font-size: 12.5px; color: var(--text-dim); }
 
     /* ── INTERACTIVE ITEMS ── */
-    .system-check-item { background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: border-color 150ms; }
-    .system-check-item:hover { border-color: var(--olive-dim); }
+    .system-check-item { background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: border-color 150ms, background-color 150ms; user-select: none; }
+    .system-check-item:hover { border-color: var(--olive); background-color: var(--panel); }
+    .system-check-item:hover .custom-checkbox { border-color: var(--olive); }
     .system-check-item.done { border-color: var(--olive-dim); background-color: rgba(26,32,41,0.6); }
-    .system-check-text { font-family: var(--font-body); font-size: 14px; color: var(--text); }
+    .system-check-item.done .custom-checkbox { background-color: var(--olive) !important; border-color: var(--olive) !important; }
+    .system-check-item.done .checkmark-icon { opacity: 1 !important; stroke: var(--bg) !important; }
+    .system-check-text { font-family: var(--font-body); font-size: 14px; color: var(--text); pointer-events: none; }
     .system-check-item.done .system-check-text { text-decoration: line-through; color: var(--text-dim); }
 
     /* ── FORM FIELDS ── */

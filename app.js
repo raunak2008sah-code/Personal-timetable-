@@ -801,7 +801,11 @@ function renderWeeklyReset() {
 
     const checkElem = document.createElement("div");
     checkElem.className = "custom-checkbox";
-    checkElem.innerHTML = `<svg class="checkmark-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    if (isDone) {
+      checkElem.style.backgroundColor = "var(--olive)";
+      checkElem.style.borderColor = "var(--olive)";
+    }
+    checkElem.innerHTML = `<svg class="checkmark-icon" style="opacity: ${isDone ? "1" : "0"}; stroke: var(--bg);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
     item.appendChild(textSpan);
     item.appendChild(checkElem);
@@ -929,17 +933,21 @@ function renderHabitTracker() {
 
     const checkElem = document.createElement("div");
     checkElem.className = "custom-checkbox";
-    checkElem.innerHTML = `<svg class="checkmark-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    if (isDone) {
+      checkElem.style.backgroundColor = "var(--olive)";
+      checkElem.style.borderColor = "var(--olive)";
+    }
+    checkElem.innerHTML = `<svg class="checkmark-icon" style="opacity: ${isDone ? "1" : "0"}; stroke: var(--bg);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
     item.appendChild(textSpan);
     item.appendChild(checkElem);
 
-    const toggle = async () => {
+    const toggle = () => {
       STATE.habits[idx] = !STATE.habits[idx];
-      await StorageLayer.set(`habits:${STATE.dateStr}`, STATE.habits);
       STATE.habitHistory[STATE.dateStr] = [...STATE.habits];
       updateHabitsBadgeUI();
       renderHabitsTabSections();
+      StorageLayer.set(`habits:${STATE.dateStr}`, STATE.habits);
     };
 
     item.addEventListener("click", toggle);
