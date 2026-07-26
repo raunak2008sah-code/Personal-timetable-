@@ -1,0 +1,24 @@
+{
+  "name": "Adaptive Timetable — Mission Log",
+  "short_name": "Timetable",
+  "description": "Personal adaptive timetable for CBSE Boards 2027, JEE Main 2027, and NDA 2 2026.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#12161c",
+  "theme_color": "#12161c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

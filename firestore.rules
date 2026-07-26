@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Scoped rules for sync code path security
+    // Access is restricted to path documents starting under users/{syncCode}/...
+    match /users/{syncCode}/{document=**} {
+      allow read, write: if syncCode != null && syncCode.size() >= 4;
+    }
+  }
+}

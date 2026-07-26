@@ -1,0 +1,8 @@
+# Local environment & config overrides
+.env
+.env.local
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db

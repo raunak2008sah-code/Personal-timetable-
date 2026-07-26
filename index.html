@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Timetable System — Mission Log</title>
+  <meta name="description" content="Personal adaptive timetable for CBSE Boards 2027, JEE Main 2027, and NDA 2 2026 preparation.">
+  <meta name="theme-color" content="#12161c">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── DESIGN SYSTEM TOKENS ── */
+    :root {
+      --bg:            #12161c;
+      --panel:         #1a2029;
+      --panel-raised:  #212933;
+      --line:          #2b3542;
+      --text:          #e7e5dd;
+      --text-dim:      #8b93a1;
+      --olive:         #8a9a68;
+      --olive-dim:     #4d5a3d;
+      --amber:         #d9a441;
+      --danger:        #c2604f;
+      --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.5; padding: 24px 16px 48px 16px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    :focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+    /* ── LAYOUT ── */
+    .app-container { max-width: 860px; margin: 0 auto; display: none; }
+    .header-bar { margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+    .system-eyebrow { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .badge-user { color: var(--olive); background: rgba(138, 154, 104, 0.12); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--olive-dim); }
+    .date-display { font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 700; color: var(--text); letter-spacing: -0.02em; line-height: 1.2; }
+    .sub-meta { font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); margin-top: 6px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .sub-meta-item { display: inline-flex; align-items: center; gap: 6px; }
+    .sub-meta-dot { width: 6px; height: 6px; border-radius: 50%; background-color: var(--olive); display: inline-block; }
+
+    /* ── SLEEP CARD ── */
+    .sleep-card { background-color: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .sleep-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+    .sleep-title { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--amber); display: flex; align-items: center; gap: 8px; }
+    .sleep-select-wrapper { display: flex; align-items: center; gap: 10px; }
+    .sleep-select-label { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+    .sleep-select { background-color: var(--panel-raised); color: var(--text); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 6px; cursor: pointer; outline: none; transition: border-color 150ms; }
+    .sleep-select:hover, .sleep-select:focus-visible { border-color: var(--amber); }
+    .sleep-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .sleep-metric-tile { background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+    .metric-label { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 4px; }
+    .metric-value { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text); }
+
+    /* ── TABS ── */
+    .tabs-nav { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 16px; overflow-x: auto; scroll-behavior: smooth; }
+    .tab-btn { background: transparent; border: none; padding: 12px 20px; font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text-dim); cursor: pointer; border-bottom: 3px solid transparent; border-radius: 6px 6px 0 0; transition: color 150ms, border-color 150ms, background-color 150ms; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+    .tab-btn:hover { color: var(--text); background-color: rgba(255,255,255,0.02); }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--olive); background-color: var(--panel); }
+    .tab-badge { font-family: var(--font-mono); font-size: 11px; background-color: var(--panel-raised); color: var(--olive); border: 1px solid var(--olive-dim); padding: 1px 6px; border-radius: 10px; margin-left: 4px; }
+
+    /* ── SUBJECT WHEEL STRIP ── */
+    .wheel-strip { background-color: var(--panel-raised); border: 1px solid var(--line); border-left: 3px solid var(--olive); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
+    .wheel-title { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--olive); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .wheel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .wheel-item { font-family: var(--font-mono); font-size: 13px; color: var(--text); }
+    .wheel-item span { color: var(--text-dim); font-size: 11px; display: block; margin-bottom: 2px; text-transform: uppercase; }
+    .wheel-subject-highlight { color: var(--olive); font-weight: 600; }
+
+    /* ── OPS BAR ── */
+    .ops-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; background-color: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; }
+    .progress-section { flex: 1; min-width: 240px; }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-family: var(--font-mono); font-size: 13px; }
+    .progress-title { color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+    .progress-count { color: var(--olive); font-weight: 600; }
+    .progress-track { height: 8px; background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background-color: var(--olive); width: 0%; transition: width 150ms ease-out; border-radius: 4px; }
+    .btn-reset { background: transparent; color: var(--danger); border: 1px solid var(--danger); font-family: var(--font-mono); font-size: 12px; font-weight: 500; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: background-color 150ms, color 150ms; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .btn-reset:hover { background-color: rgba(194,96,79,0.12); }
+
+    /* ── TIMELINE ── */
+    .timeline-container { position: relative; padding-left: 32px; }
+    .timeline-container::before { content: ''; position: absolute; left: 13px; top: 24px; bottom: 24px; width: 2px; background-color: var(--line); z-index: 1; }
+    .block-item { position: relative; margin-bottom: 14px; z-index: 2; }
+    .block-node { position: absolute; left: -32px; top: 20px; width: 16px; height: 16px; border-radius: 50%; background-color: var(--bg); border: 2px solid var(--line); z-index: 3; transition: background-color 150ms, border-color 150ms; transform: translateX(5px); display: flex; align-items: center; justify-content: center; }
+    .block-item.done .block-node { background-color: var(--olive); border-color: var(--olive); }
+    .block-item.done .block-node::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background-color: var(--bg); }
+    .block-card { background-color: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; cursor: pointer; transition: border-color 150ms, background-color 150ms, opacity 150ms; user-select: none; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .block-card:hover { background-color: var(--panel-raised); border-color: var(--olive-dim); }
+    .block-item.done .block-card { border-color: var(--olive-dim); background-color: rgba(26,32,41,0.6); opacity: 0.75; }
+    .block-main { flex: 1; min-width: 0; }
+    .block-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--text-dim); margin-bottom: 4px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; }
+    .block-item.done .block-eyebrow { color: var(--olive-dim); }
+    .block-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 4px; }
+    .block-item.done .block-title { text-decoration: line-through; color: var(--text-dim); }
+    .block-detail { font-family: var(--font-body); font-size: 13.5px; color: var(--text-dim); line-height: 1.4; }
+    .block-item.done .block-detail { color: rgba(139,147,161,0.7); }
+    .block-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+    .block-duration { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text-dim); background-color: var(--panel-raised); border: 1px solid var(--line); padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+    .block-item.done .block-duration { color: var(--olive-dim); border-color: rgba(77,90,61,0.5); }
+    .custom-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); background-color: var(--panel-raised); display: flex; align-items: center; justify-content: center; transition: background-color 150ms, border-color 150ms; }
+    .block-card:hover .custom-checkbox { border-color: var(--olive); }
+    .block-item.done .custom-checkbox { background-color: var(--olive); border-color: var(--olive); }
+    .checkmark-icon { width: 14px; height: 14px; stroke: var(--bg); stroke-width: 3; fill: none; opacity: 0; transition: opacity 150ms; }
+    .block-item.done .checkmark-icon { opacity: 1; }
+
+    /* ── SYSTEM & HABITS CARDS ── */
+    .system-card { background-color: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .section-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .section-heading { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 14px; }
+    .btn-range-toggle { background: var(--panel-raised); color: var(--text-dim); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: color 150ms, border-color 150ms; }
+    .btn-range-toggle:hover { color: var(--text); border-color: var(--olive-dim); }
+    .btn-range-toggle.active { color: var(--olive); border-color: var(--olive); background-color: var(--panel); font-weight: 600; }
+
+    /* ── HEATMAP ── */
+    .heatmap-wrapper { overflow-x: auto; padding-bottom: 6px; }
+    .heatmap-grid { display: flex; flex-direction: column; gap: 6px; min-width: 280px; }
+    .heatmap-header-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+    .heatmap-header-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+    .heatmap-cells { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .heatmap-grid.range-90 .heatmap-cells { grid-template-columns: repeat(auto-fill, minmax(18px, 1fr)); }
+    .heatmap-cell { width: 100%; aspect-ratio: 1; min-width: 16px; min-height: 16px; border-radius: 4px; border: 1px solid var(--line); cursor: pointer; transition: transform 100ms, border-color 150ms; }
+    .heatmap-cell:hover, .heatmap-cell.selected { transform: scale(1.15); border-color: var(--text); z-index: 5; }
+    .heatmap-cell.no-data { background-color: rgba(33,41,51,0.4); border-style: dashed; border-color: rgba(43,53,66,0.6); opacity: 0.6; }
+    .heatmap-cell.step-0 { background-color: var(--panel-raised); }
+    .heatmap-cell.step-1, .heatmap-cell.step-2 { background-color: rgba(138,154,104,0.25); border-color: rgba(138,154,104,0.4); }
+    .heatmap-cell.step-3, .heatmap-cell.step-4 { background-color: rgba(138,154,104,0.5); border-color: rgba(138,154,104,0.7); }
+    .heatmap-cell.step-5 { background-color: rgba(138,154,104,0.75); border-color: var(--olive); }
+    .heatmap-cell.step-6 { background-color: var(--olive); border-color: var(--olive); }
+    .heatmap-detail-card { background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-top: 14px; font-size: 13px; }
+    .detail-habits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px; margin-top: 8px; }
+    .detail-habit-item { font-family: var(--font-mono); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+    .detail-habit-item.done { color: var(--olive); }
+    .detail-habit-item.missed { color: var(--text-dim); }
+    .chart-empty-state { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-dim); text-align: center; padding: 24px 16px; background-color: var(--panel-raised); border: 1px dashed var(--line); border-radius: 8px; }
+
+    /* ── COLLAPSIBLE ── */
+    .collapsible-header { cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+    .collapse-icon { font-family: var(--font-mono); font-size: 14px; color: var(--amber); background: var(--panel-raised); border: 1px solid var(--line); padding: 2px 8px; border-radius: 4px; }
+    .collapsible-content { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; color: var(--text); line-height: 1.6; }
+    .collapsible-content p { margin-bottom: 12px; }
+    .collapsible-content.expanded { display: block; }
+
+    /* ── SYSTEM TABLES ── */
+    .system-table-wrapper { overflow-x: auto; }
+    .system-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+    .system-table th, .system-table td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; }
+    .system-table th { background-color: var(--panel-raised); font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+    .system-table td { color: var(--text); }
+    .table-caption { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-top: 10px; }
+    .table-caption-amber { font-family: var(--font-mono); font-size: 13px; color: var(--amber); margin-top: 10px; font-weight: 500; }
+
+    /* ── PRIORITY MATRIX ── */
+    .priority-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    @media (max-width: 440px) { .priority-grid { grid-template-columns: 1fr; } }
+    .quadrant-box { border-radius: 8px; padding: 14px; border: 1px solid var(--line); }
+    .quad-1 { background-color: rgba(217,164,65,0.08); border-color: rgba(217,164,65,0.3); }
+    .quad-2 { background-color: rgba(138,154,104,0.08); border-color: rgba(138,154,104,0.3); }
+    .quad-3 { background-color: rgba(43,53,66,0.5); border-color: var(--line); }
+    .quad-4 { background-color: rgba(194,96,79,0.08); border-color: rgba(194,96,79,0.25); }
+    .quad-tag { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 4px; }
+    .quad-action { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .quad-desc { font-family: var(--font-body); font-size: 12.5px; color: var(--text-dim); }
+
+    /* ── INTERACTIVE ITEMS ── */
+    .system-check-item { background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: border-color 150ms; }
+    .system-check-item:hover { border-color: var(--olive-dim); }
+    .system-check-item.done { border-color: var(--olive-dim); background-color: rgba(26,32,41,0.6); }
+    .system-check-text { font-family: var(--font-body); font-size: 14px; color: var(--text); }
+    .system-check-item.done .system-check-text { text-decoration: line-through; color: var(--text-dim); }
+
+    /* ── FORM FIELDS ── */
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .saved-flash { font-family: var(--font-mono); font-size: 11px; color: var(--olive); opacity: 0; transition: opacity 200ms ease; }
+    .saved-flash.visible { opacity: 1; }
+    .form-textarea { width: 100%; background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; color: var(--text); padding: 10px 12px; font-family: var(--font-body); font-size: 13.5px; resize: vertical; min-height: 70px; outline: none; transition: border-color 150ms; }
+    .form-textarea:focus-visible { border-color: var(--olive); }
+    .form-textarea::placeholder { font-family: var(--font-mono); font-size: 12px; color: rgba(139,147,161,0.5); }
+
+    /* ── SYLLABUS ROWS ── */
+    .syllabus-row { display: flex; align-items: center; gap: 12px; background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+    .syllabus-name { font-family: var(--font-mono); font-size: 13px; width: 130px; flex-shrink: 0; color: var(--text); }
+    .syllabus-track { flex: 1; height: 6px; background-color: var(--panel); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+    .syllabus-fill { height: 100%; background-color: var(--olive); width: 0%; transition: width 200ms ease; }
+    .syllabus-input-wrap { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+    .syllabus-input { width: 52px; background-color: var(--panel); border: 1px solid var(--line); color: var(--text); font-family: var(--font-mono); font-size: 13px; text-align: center; padding: 4px; border-radius: 4px; outline: none; }
+    .syllabus-input:focus-visible { border-color: var(--olive); }
+
+    /* ── SETTINGS INPUT (for school timing) ── */
+    .settings-input { background-color: var(--panel-raised); border: 1px solid var(--line); color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 6px 10px; border-radius: 6px; outline: none; width: 160px; transition: border-color 150ms; }
+    .settings-input:focus-visible { border-color: var(--olive); }
+    .settings-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    .settings-label { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); width: 140px; flex-shrink: 0; }
+
+    /* ── ACTION BUTTONS ── */
+    .btn-action { background: var(--panel-raised); color: var(--text); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; font-weight: 500; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: border-color 150ms, background-color 150ms; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-action:hover { border-color: var(--olive-dim); background-color: var(--panel); }
+    .btn-action-sm { font-size: 11px; padding: 4px 10px; }
+
+    /* ── SYNC MODAL ── */
+    .sync-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+    .sync-modal { background-color: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 32px; max-width: 440px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .sync-modal h2 { font-family: var(--font-display); font-size: 20px; color: var(--text); margin-bottom: 8px; }
+    .sync-modal p { font-size: 13.5px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+    .sync-modal input { width: 100%; background-color: var(--panel-raised); border: 1px solid var(--line); color: var(--text); font-family: var(--font-mono); font-size: 16px; font-weight: 600; padding: 12px 14px; border-radius: 8px; text-align: center; letter-spacing: 0.1em; outline: none; margin-bottom: 16px; }
+    .sync-modal input:focus-visible { border-color: var(--olive); }
+    .sync-modal-actions { display: flex; gap: 10px; }
+    .sync-modal-actions button { flex: 1; padding: 10px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--line); transition: background-color 150ms; }
+    .btn-sync-generate { background: var(--panel-raised); color: var(--text-dim); }
+    .btn-sync-generate:hover { background: var(--line); }
+    .btn-sync-connect { background: var(--olive); color: var(--bg); border-color: var(--olive); }
+    .btn-sync-connect:hover { background: #7a8a5a; }
+
+    /* ── LOADING ── */
+    #app-loading { text-align: center; padding: 80px 20px; font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); }
+    #app-loading .spinner { width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--olive); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FOOTER ── */
+    .app-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 540px) {
+      body { padding: 16px 12px 32px 12px; }
+      .sleep-card { padding: 14px; }
+      .block-card { padding: 12px 14px; }
+      .block-title { font-size: 15px; }
+      .block-duration { font-size: 11px; padding: 3px 8px; }
+      .syllabus-name { width: 95px; font-size: 12px; }
+    }
+
+    /* ── PRINT STYLESHEET ── */
+    @media print {
+      body { background: #fff !important; color: #111 !important; padding: 12px !important; font-size: 12px !important; }
+      .app-container { display: block !important; max-width: 100%; }
+      .sleep-card, .tabs-nav, .ops-bar, #ops-bar-container, .app-footer,
+      #system-view-container, #habits-view-container, #subject-wheel-strip,
+      .sync-modal-overlay, #app-loading, .block-node { display: none !important; }
+      .header-bar { border-bottom: 2px solid #333; margin-bottom: 12px; padding-bottom: 8px; }
+      .system-eyebrow, .badge-user { color: #555 !important; background: none !important; border: none !important; }
+      .date-display { color: #111 !important; font-size: 18px !important; }
+      .sub-meta { color: #555 !important; }
+      .sub-meta-dot { background-color: #555 !important; }
+      .timeline-container { padding-left: 0 !important; }
+      .timeline-container::before { display: none !important; }
+      #blocks-container { display: block !important; }
+      .block-card { background: #fff !important; border: 1px solid #ccc !important; opacity: 1 !important; padding: 8px 12px !important; margin-bottom: 6px !important; page-break-inside: avoid; }
+      .block-eyebrow { color: #888 !important; }
+      .block-title { color: #111 !important; font-size: 13px !important; text-decoration: none !important; }
+      .block-item.done .block-title { text-decoration: line-through !important; color: #888 !important; }
+      .block-detail { color: #555 !important; font-size: 11px !important; }
+      .block-duration { background: none !important; border: 1px solid #ccc !important; color: #333 !important; font-size: 10px !important; }
+      .custom-checkbox { border: 2px solid #333 !important; background: #fff !important; width: 16px !important; height: 16px !important; }
+      .block-item.done .custom-checkbox { background: #333 !important; }
+      .checkmark-icon { stroke: #fff !important; }
+      .block-item.done .checkmark-icon { opacity: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SYNC CODE MODAL -->
+  <div class="sync-modal-overlay" id="sync-modal-overlay">
+    <div class="sync-modal">
+      <h2>🔗 Connect Your Timetable</h2>
+      <p>Enter your sync code to connect this device. Use the same code on every device to keep them in sync. Leave blank to generate a new one.</p>
+      <input type="text" id="sync-code-input" placeholder="e.g. Xk7mRt3p" maxlength="20" autocomplete="off" spellcheck="false">
+      <div class="sync-modal-actions">
+        <button class="btn-sync-generate" id="sync-generate-btn">Generate New</button>
+        <button class="btn-sync-connect" id="sync-connect-btn">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING INDICATOR -->
+  <div id="app-loading">
+    <div class="spinner"></div>
+    Initializing Timetable System...
+  </div>
+
+  <div class="app-container">
+
+    <!-- HEADER -->
+    <header class="header-bar">
+      <div class="system-eyebrow">
+        <span>MISSION LOG :: ADAPTIVE TIMETABLE</span>
+        <span class="badge-user">USER :: RAUNAK</span>
+      </div>
+      <h1 class="date-display" id="current-date-display">Loading Date...</h1>
+      <div class="sub-meta">
+        <span class="sub-meta-item"><span class="sub-meta-dot"></span> CBSE BOARDS 2027</span>
+        <span class="sub-meta-item"><span class="sub-meta-dot"></span> JEE MAIN 2027</span>
+        <span class="sub-meta-item"><span class="sub-meta-dot"></span> NDA 2 2026</span>
+      </div>
+    </header>
+
+    <!-- SLEEP REPAIR PHASE TRACKER -->
+    <section class="sleep-card">
+      <div class="sleep-header">
+        <div class="sleep-title"><span>😴 SLEEP REPAIR PHASE TRACKER</span></div>
+        <div class="sleep-select-wrapper">
+          <label for="sleep-phase-select" class="sleep-select-label">ACTIVE PHASE:</label>
+          <select id="sleep-phase-select" class="sleep-select" aria-label="Select sleep repair phase">
+            <option value="1">Phase 1 (Weeks 1–2)</option>
+            <option value="2">Phase 2 (Weeks 3–4)</option>
+            <option value="3">Phase 3 (Weeks 5+)</option>
+          </select>
+        </div>
+      </div>
+      <div class="sleep-metrics-grid">
+        <div class="sleep-metric-tile">
+          <div class="metric-label">Post-School Nap</div>
+          <div class="metric-value" id="sleep-nap-val">25–30 min (alarm-locked)</div>
+        </div>
+        <div class="sleep-metric-tile">
+          <div class="metric-label">Target Bedtime</div>
+          <div class="metric-value" id="sleep-bedtime-val">12:00–12:15 AM</div>
+        </div>
+        <div class="sleep-metric-tile">
+          <div class="metric-label">Expected Sleep Result</div>
+          <div class="metric-value" id="sleep-result-val">~5.5–6 hrs</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABS -->
+    <nav class="tabs-nav" role="tablist" aria-label="Timetable Schedule Modes">
+      <button class="tab-btn active" id="tab-school" role="tab" aria-selected="true" aria-controls="main-view-panel">🏫 School Day</button>
+      <button class="tab-btn" id="tab-holiday" role="tab" aria-selected="false" aria-controls="main-view-panel">🏠 Holiday</button>
+      <button class="tab-btn" id="tab-busy" role="tab" aria-selected="false" aria-controls="main-view-panel">⚡ Busy / Special Day</button>
+      <button class="tab-btn" id="tab-system" role="tab" aria-selected="false" aria-controls="main-view-panel">⚙️ System <span id="system-badge" class="tab-badge">0/4</span></button>
+      <button class="tab-btn" id="tab-habits" role="tab" aria-selected="false" aria-controls="main-view-panel">📈 Habits <span id="habits-badge" class="tab-badge">0/6</span></button>
+    </nav>
+
+    <!-- SUBJECT WHEEL STRIP -->
+    <div id="subject-wheel-strip" class="wheel-strip">
+      <div class="wheel-title">
+        <span>🔄 WEEKLY SUBJECT WHEEL — TODAY'S ROTATION</span>
+        <span id="wheel-day-name" style="color: var(--text-dim);">MONDAY</span>
+      </div>
+      <div class="wheel-grid">
+        <div class="wheel-item"><span>Deep Block 1 (Hardest)</span><div id="wheel-deep1-val" class="wheel-subject-highlight">Physics</div></div>
+        <div class="wheel-item"><span>Deep Block 2 (Moderate)</span><div id="wheel-deep2-val" class="wheel-subject-highlight">Maths</div></div>
+        <div class="wheel-item"><span>Light Block</span><div id="wheel-light-val" class="wheel-subject-highlight">Computer Science</div></div>
+      </div>
+    </div>
+
+    <!-- OPS BAR -->
+    <div class="ops-bar" id="ops-bar-container">
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-title">CHECKLIST PROGRESS</span>
+          <span class="progress-count" id="progress-text">0 / 0 (0%)</span>
+        </div>
+        <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress-fill-bar"></div></div>
+      </div>
+      <button id="reset-checklist-btn" class="btn-reset" title="Reset checks for today&#39;s active tab">↺ Reset Today's Checklist</button>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <main id="main-view-panel" role="tabpanel" tabindex="0">
+
+      <!-- DAILY TIMELINE -->
+      <div class="timeline-container" id="blocks-container"></div>
+
+      <!-- SYSTEM TAB -->
+      <div id="system-view-container" style="display: none;">
+
+        <!-- Sleep Rationale -->
+        <section class="system-card">
+          <div class="collapsible-header" id="sleep-rationale-header">
+            <div>
+              <div class="section-eyebrow">SLEEP · REPAIR RATIONALE</div>
+              <div class="section-heading" style="margin-bottom: 0;">🛌 Why the Nap Is Capped</div>
+            </div>
+            <span class="collapse-icon" id="sleep-rationale-toggle">[+] Expand</span>
+          </div>
+          <div class="collapsible-content" id="sleep-rationale-body">
+            <p>Right now: wake 5:30–6:00 AM, sleep 12:30–1:30 AM → 4–5 hrs. Goal: 7–8 hrs. This gap is the #1 threat to everything else in this system — sleep debt quietly wrecks retention, focus, and mood before you even notice it happening.</p>
+            <p>The "sleep after school" instinct is partly right — but capped. A long, unstructured post-school sleep (1–2+ hrs) is likely why bedtime drifts to 12:30–1:30 AM — you're not tired enough at 10:30 PM because you already slept once. The fix isn't removing the nap, it's shrinking and fixing it, then rebuilding night sleep gradually.</p>
+            <p><strong>Why this works:</strong> the nap is capped short enough to stay a recharge, not a second sleep cycle — so your body is still ready for sleep pressure to build again by night. The real lever is moving your hardest deep-work into early-to-mid evening instead of post-11 PM, so late-night study stops being the reason bedtime slips.</p>
+          </div>
+        </section>
+
+        <!-- Weekly Subject Wheel -->
+        <section class="system-card">
+          <div class="section-eyebrow">SCHEDULE · WEEKLY ROTATION</div>
+          <div class="section-heading">🔄 Weekly Subject Wheel</div>
+          <div class="system-table-wrapper">
+            <table class="system-table">
+              <thead><tr><th>Day</th><th>Deep Block 1 (Hardest)</th><th>Deep Block 2 (Moderate)</th><th>Light Block</th></tr></thead>
+              <tbody>
+                <tr><td>Mon</td><td>Physics</td><td>Maths</td><td>CS</td></tr>
+                <tr><td>Tue</td><td>Chemistry</td><td>Physics</td><td>NDA GAT</td></tr>
+                <tr><td>Wed</td><td>Maths</td><td>Chemistry</td><td>English</td></tr>
+                <tr><td>Thu</td><td>Physics</td><td>Maths</td><td>CS</td></tr>
+                <tr><td>Fri</td><td>Chemistry</td><td>Physics</td><td>NDA GAT</td></tr>
+                <tr><td>Sat</td><td>Maths</td><td>Chemistry</td><td>English + NDA Maths speed drills</td></tr>
+                <tr><td>Sun (Holiday)</td><td colspan="3">Full 3-block rotation + mock/revision day</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-caption">Chemistry gets equal rotation weight despite being 'less-studied' rather than weak — this closes the gap before it becomes a real weakness.</div>
+        </section>
+
+        <!-- Fallback Protocols -->
+        <section class="system-card">
+          <div class="section-eyebrow">TRIAGE · ADAPTIVE PROTOCOLS</div>
+          <div class="section-heading">🚑 Fallback Protocols (Recovery Without Guilt)</div>
+          <div class="system-table-wrapper">
+            <table class="system-table">
+              <thead><tr><th>Situation</th><th>What To Do</th></tr></thead>
+              <tbody>
+                <tr><td>Low motivation</td><td>Do 10 min of the easiest task on the list — momentum beats willpower. Don't skip the whole day.</td></tr>
+                <tr><td>Unexpected guests/family event</td><td>Protect only: 2-min recall + one priority-subject touch + sleep. Everything else is skippable.</td></tr>
+                <tr><td>School runs overtime</td><td>Cut skill block first, then Deep Block 2 duration — never cut sleep or the recall block.</td></tr>
+                <tr><td>Travel day</td><td>Use commute-style audiobook listening as your only "study." That's enough for one day.</td></tr>
+                <tr><td>Feeling sick</td><td>Rest fully. One glance at notes if genuinely up for it — otherwise zero guilt, full stop.</td></tr>
+                <tr><td>Missed a session entirely</td><td>Do NOT try to "make it up" by stacking tomorrow. Just resume the normal wheel — missed rotations repeat next week anyway.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-caption-amber">"The system is designed to survive being broken. A missed day is not a failed system — only giving up on resuming is."</div>
+        </section>
+
+        <!-- Weekly Reset Checklist -->
+        <section class="system-card">
+          <div class="section-eyebrow"><span>WEEKLY SYSTEM · RESET</span><span id="weekly-period-label" style="color: var(--text-dim);">Week 30, 2026</span></div>
+          <div class="section-heading">✅ Weekly Reset Checklist</div>
+          <div id="weekly-reset-list"></div>
+        </section>
+
+        <!-- Weekly Review -->
+        <section class="system-card">
+          <div class="section-eyebrow"><span>WEEKLY SYSTEM · REVIEW</span><span id="weekly-review-period" style="color: var(--text-dim);">Week 30, 2026</span></div>
+          <div class="section-heading">📊 Weekly Review</div>
+          <div class="form-group"><div class="form-label"><span>1. Which subject got the least real attention this week?</span><span class="saved-flash" id="flash-w1">✓ Saved</span></div><textarea class="form-textarea" id="wrev-q1" placeholder="— not filled in yet —"></textarea></div>
+          <div class="form-group"><div class="form-label"><span>2. What's one thing that broke the schedule, and what's the fix?</span><span class="saved-flash" id="flash-w2">✓ Saved</span></div><textarea class="form-textarea" id="wrev-q2" placeholder="— not filled in yet —"></textarea></div>
+          <div class="form-group"><div class="form-label"><span>3. Energy levels this week: consistently low / mixed / good?</span><span class="saved-flash" id="flash-w3">✓ Saved</span></div><textarea class="form-textarea" id="wrev-q3" placeholder="— not filled in yet —"></textarea></div>
+        </section>
+
+        <!-- Priority Matrix -->
+        <section class="system-card">
+          <div class="section-eyebrow">TRIAGE · DECISION MATRIX</div>
+          <div class="section-heading">🎯 Priority Matrix</div>
+          <div class="priority-grid">
+            <div class="quadrant-box quad-1"><div class="quad-tag">URGENT &amp; IMPORTANT</div><div class="quad-action">Do first</div><div class="quad-desc">(exam-linked deadlines)</div></div>
+            <div class="quadrant-box quad-2"><div class="quad-tag">NOT URGENT &amp; IMPORTANT</div><div class="quad-action">Schedule normally</div><div class="quad-desc">(Wheel subjects)</div></div>
+            <div class="quadrant-box quad-3"><div class="quad-tag">URGENT &amp; NOT IMPORTANT</div><div class="quad-action">Delegate / skip if possible</div><div class="quad-desc">(unplanned interrupts)</div></div>
+            <div class="quadrant-box quad-4"><div class="quad-tag">NOT URGENT &amp; NOT IMPORTANT</div><div class="quad-action">Cut without guilt</div><div class="quad-desc">(skill block, leisure overflow)</div></div>
+          </div>
+        </section>
+
+        <!-- Syllabus Progress -->
+        <section class="system-card">
+          <div class="section-eyebrow"><span>MONTHLY TRACKING · SYLLABUS</span><span id="syllabus-month-label" style="color: var(--text-dim);">July 2026</span></div>
+          <div class="section-heading">📚 Syllabus Progress</div>
+          <div id="syllabus-list"></div>
+        </section>
+
+        <!-- Monthly Reflection -->
+        <section class="system-card">
+          <div class="section-eyebrow"><span>MONTHLY SYSTEM · REFLECTION</span><span id="monthly-reflection-period" style="color: var(--text-dim);">July 2026</span></div>
+          <div class="section-heading">🗓️ Monthly Reflection</div>
+          <div class="form-group"><div class="form-label"><span>1. Syllabus completion % per subject vs. plan</span><span class="saved-flash" id="flash-m1">✓ Saved</span></div><textarea class="form-textarea" id="mref-q1" placeholder="— not filled in yet —"></textarea></div>
+          <div class="form-group"><div class="form-label"><span>2. Sleep phase progress — which phase are you actually in now?</span><span class="saved-flash" id="flash-m2">✓ Saved</span></div><textarea class="form-textarea" id="mref-q2" placeholder="— not filled in yet —"></textarea></div>
+          <div class="form-group"><div class="form-label"><span>3. One habit to double down on, one to drop</span><span class="saved-flash" id="flash-m3">✓ Saved</span></div><textarea class="form-textarea" id="mref-q3" placeholder="— not filled in yet —"></textarea></div>
+        </section>
+
+        <!-- School Settings -->
+        <section class="system-card">
+          <div class="section-eyebrow"><span>SETTINGS · SCHOOL TIMING</span><span class="saved-flash" id="flash-settings">✓ Saved</span></div>
+          <div class="section-heading">🏫 School Settings</div>
+          <div class="settings-row">
+            <span class="settings-label">School end time</span>
+            <input type="text" class="settings-input" id="setting-school-end" value="4:00–5:00 PM" placeholder="e.g. 4:00 PM">
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Commute duration</span>
+            <input type="text" class="settings-input" id="setting-commute" value="30 min" placeholder="e.g. 30 min">
+          </div>
+          <div class="table-caption">These values update the School Day tab's block durations in real time.</div>
+        </section>
+
+        <!-- Sync & Data Management -->
+        <section class="system-card">
+          <div class="section-eyebrow">DATA · SYNC &amp; BACKUP</div>
+          <div class="section-heading">🔗 Sync Code &amp; Data Management</div>
+
+          <div class="settings-row" style="margin-bottom: 14px;">
+            <span class="settings-label">Your sync code</span>
+            <span id="sync-code-display-value" style="font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--olive); letter-spacing: 0.08em;">—</span>
+            <button class="btn-action btn-action-sm" id="btn-copy-sync-code">Copy</button>
+            <button class="btn-action btn-action-sm" id="btn-change-sync-code">Change</button>
+          </div>
+          <div class="table-caption" style="margin-bottom: 16px;">Use the same code on every device to keep your data in sync. Treat it like a password — anyone with it can access your data.</div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-action" id="btn-export-data">⇓ Export All Data</button>
+            <button class="btn-action" id="btn-import-data">⇑ Import Backup</button>
+            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            <span class="saved-flash" id="flash-export">✓ Exported</span>
+          </div>
+        </section>
+
+        <!-- Design Notes -->
+        <section class="system-card" style="border-left: 3px solid var(--text-dim);">
+          <div class="section-eyebrow">SYSTEM NOTES · ARCHITECTURE</div>
+          <div class="section-heading">📌 Notes on Design</div>
+          <div style="font-family: var(--font-mono); font-size: 12.5px; color: var(--text-dim); line-height: 1.6;">
+            • No fixed clock times on purpose — if your day shifts 30–60 min, the block order still holds.<br>
+            • NDA GAT builds gradually — it's in the Light Block rotation now, and will need a dedicated Deep Block once Boards syllabus crosses ~70%.<br>
+            • Mock tests activate automatically once any subject crosses 70–80% syllabus completion — don't force them before that.<br>
+            • This is standalone — separate from the Operating Manual and Mission Control.
+          </div>
+        </section>
+
+      </div>
+
+      <!-- HABITS TAB -->
+      <div id="habits-view-container" style="display: none;">
+
+        <section class="system-card">
+          <div class="section-eyebrow"><span>DAILY SYSTEM · HABIT SIGNALS</span><span style="color: var(--text-dim);">TODAY</span></div>
+          <div class="section-heading">📈 Today's Habit Checklist</div>
+          <div id="habits-today-list"></div>
+        </section>
+
+        <section class="system-card">
+          <div class="section-eyebrow"><span>HISTORICAL VISUALIZATION · CONSISTENCY</span><div><button id="btn-range-30" class="btn-range-toggle active">30 Days</button><button id="btn-range-90" class="btn-range-toggle">90 Days</button></div></div>
+          <div class="section-heading">📅 Consistency Heatmap</div>
+          <div id="heatmap-empty-state" class="chart-empty-state" style="display: none;">"Keep checking off days — your 30-day pattern will build in here."</div>
+          <div class="heatmap-wrapper" id="heatmap-container"></div>
+          <div id="heatmap-detail-box" class="heatmap-detail-card" style="display: none;"></div>
+        </section>
+
+        <section class="system-card">
+          <div class="section-eyebrow">HISTORICAL VISUALIZATION · BREAKDOWN</div>
+          <div class="section-heading">📊 Per-Habit Breakdown</div>
+          <div id="breakdown-empty-state" class="chart-empty-state" style="display: none;">"Not enough data yet to compare habits — check back in a few days."</div>
+          <div id="breakdown-container"></div>
+        </section>
+
+        <section class="system-card">
+          <div class="section-eyebrow">HISTORICAL VISUALIZATION · TREND</div>
+          <div class="section-heading">📈 Weekly Completion Trend</div>
+          <div id="trend-empty-state" class="chart-empty-state" style="display: none;">"Trend line needs at least a couple of weeks of data."</div>
+          <div id="trend-container" style="overflow-x: auto;"></div>
+        </section>
+
+        <section class="system-card">
+          <div class="section-eyebrow">SYSTEM INSIGHTS · DIAGNOSTICS</div>
+          <div class="section-heading">💡 Performance Callouts</div>
+          <div id="insights-container"></div>
+        </section>
+
+      </div>
+
+    </main>
+
+    <footer class="app-footer">
+      <div>OPS LOG :: ADAPTIVE TIMETABLE SYSTEM</div>
+      <div>FIREBASE-SYNCED // OFFLINE-CAPABLE</div>
+    </footer>
+
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
