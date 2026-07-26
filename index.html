@@ -36,7 +36,38 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 
     /* ── LAYOUT ── */
-    .app-container { max-width: 860px; margin: 0 auto; display: none; }
+    .app-container { max-width: 1080px; margin: 0 auto; display: none; }
+    .app-layout { display: grid; grid-template-columns: 240px 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 768px) {
+      .app-layout { display: flex; flex-direction: column; gap: 16px; }
+    }
+
+    /* ── DAY-TYPE SELECTOR PANEL ── */
+    .day-type-panel { background-color: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .day-type-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+    .day-type-options-grid { display: flex; flex-direction: column; gap: 8px; }
+    @media (max-width: 768px) {
+      .day-type-options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    }
+    @media (max-width: 480px) {
+      .day-type-options-grid { grid-template-columns: 1fr; }
+    }
+    .day-type-option-btn { background-color: var(--panel-raised); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; color: var(--text); font-family: var(--font-display); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; text-align: left; transition: border-color 150ms, background-color 150ms, transform 100ms; }
+    .day-type-option-btn:hover { border-color: var(--olive); background-color: var(--panel); transform: translateY(-1px); }
+    .day-type-locked-box { background-color: var(--panel-raised); border: 1px solid var(--olive-dim); border-left: 3px solid var(--olive); border-radius: 8px; padding: 12px 14px; }
+    .day-type-locked-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--olive); display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .day-type-locked-footnote { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+    /* ── DISABLED TAB STYLING & TOAST ── */
+    .tab-btn.disabled-lock { opacity: 0.45; cursor: not-allowed !important; }
+    .tab-btn.disabled-lock:hover { background-color: transparent !important; color: var(--text-dim) !important; }
+    .lock-toast { background-color: rgba(217, 164, 65, 0.12); border: 1px solid var(--amber); color: var(--amber); font-family: var(--font-mono); font-size: 12.5px; padding: 8px 14px; border-radius: 6px; margin-bottom: 14px; display: none; animation: fadeIn 150ms ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── UNSELECTED PROMPT CARD ── */
+    .unselected-prompt-card { background-color: var(--panel); border: 1px dashed var(--line); border-radius: 12px; padding: 48px 24px; text-align: center; font-family: var(--font-mono); font-size: 13.5px; color: var(--text-dim); margin-bottom: 24px; }
+    .unselected-prompt-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+
     .header-bar { margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
     .system-eyebrow { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
     .badge-user { color: var(--olive); background: rgba(138, 154, 104, 0.12); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--olive-dim); }
@@ -173,8 +204,8 @@
     .system-check-item:hover { border-color: var(--olive); background-color: var(--panel); }
     .system-check-item:hover .custom-checkbox { border-color: var(--olive); }
     .system-check-item.done { border-color: var(--olive-dim); background-color: rgba(26,32,41,0.6); }
-    .system-check-item.done .custom-checkbox { background-color: var(--olive) !important; border-color: var(--olive) !important; }
-    .system-check-item.done .checkmark-icon { opacity: 1 !important; stroke: var(--bg) !important; }
+    .system-check-item.done .custom-checkbox, .done .custom-checkbox { background-color: #8a9a68 !important; border-color: #8a9a68 !important; }
+    .system-check-item.done .checkmark-icon, .done .checkmark-icon { opacity: 1 !important; stroke: #12161c !important; }
     .system-check-text { font-family: var(--font-body); font-size: 14px; color: var(--text); pointer-events: none; }
     .system-check-item.done .system-check-text { text-decoration: line-through; color: var(--text-dim); }
 
@@ -290,88 +321,130 @@
 
   <div class="app-container">
 
-    <!-- HEADER -->
-    <header class="header-bar">
-      <div class="system-eyebrow">
-        <span>MISSION LOG :: ADAPTIVE TIMETABLE</span>
-        <span class="badge-user">USER :: RAUNAK</span>
-      </div>
-      <h1 class="date-display" id="current-date-display">Loading Date...</h1>
-      <div class="sub-meta">
-        <span class="sub-meta-item"><span class="sub-meta-dot"></span> CBSE BOARDS 2027</span>
-        <span class="sub-meta-item"><span class="sub-meta-dot"></span> JEE MAIN 2027</span>
-        <span class="sub-meta-item"><span class="sub-meta-dot"></span> NDA 2 2026</span>
-      </div>
-    </header>
+    <div class="app-layout">
 
-    <!-- SLEEP REPAIR PHASE TRACKER -->
-    <section class="sleep-card">
-      <div class="sleep-header">
-        <div class="sleep-title"><span>😴 SLEEP REPAIR PHASE TRACKER</span></div>
-        <div class="sleep-select-wrapper">
-          <label for="sleep-phase-select" class="sleep-select-label">ACTIVE PHASE:</label>
-          <select id="sleep-phase-select" class="sleep-select" aria-label="Select sleep repair phase">
-            <option value="1">Phase 1 (Weeks 1–2)</option>
-            <option value="2">Phase 2 (Weeks 3–4)</option>
-            <option value="3">Phase 3 (Weeks 5+)</option>
-          </select>
+      <!-- LEFT SIDEBAR / TOP BAR DAY-TYPE PANEL -->
+      <aside class="day-type-panel">
+        <div class="day-type-eyebrow">TODAY'S DAY TYPE</div>
+        
+        <!-- Unselected state -->
+        <div id="day-type-unselected-view">
+          <div class="day-type-options-grid">
+            <button class="day-type-option-btn" id="btn-select-school" data-type="school">
+              <span>📘</span> <span>School Day</span>
+            </button>
+            <button class="day-type-option-btn" id="btn-select-holiday" data-type="holiday">
+              <span>🏠</span> <span>Holiday</span>
+            </button>
+            <button class="day-type-option-btn" id="btn-select-busy" data-type="busy">
+              <span>⚡</span> <span>Busy / Special Day</span>
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="sleep-metrics-grid">
-        <div class="sleep-metric-tile">
-          <div class="metric-label">Post-School Nap</div>
-          <div class="metric-value" id="sleep-nap-val">25–30 min (alarm-locked)</div>
+
+        <!-- Locked state -->
+        <div id="day-type-locked-view" style="display: none;">
+          <div class="day-type-locked-box">
+            <div class="day-type-locked-title" id="day-type-locked-title">📘 School Day</div>
+            <div class="day-type-locked-footnote">🔒 Locked · resets after midnight</div>
+          </div>
         </div>
-        <div class="sleep-metric-tile">
-          <div class="metric-label">Target Bedtime</div>
-          <div class="metric-value" id="sleep-bedtime-val">12:00–12:15 AM</div>
+      </aside>
+
+      <!-- MAIN COLUMN -->
+      <div class="main-column">
+
+        <!-- HEADER -->
+        <header class="header-bar">
+          <div class="system-eyebrow">
+            <span>MISSION LOG :: ADAPTIVE TIMETABLE</span>
+            <span class="badge-user">USER :: RAUNAK</span>
+          </div>
+          <h1 class="date-display" id="current-date-display">Loading Date...</h1>
+          <div class="sub-meta">
+            <span class="sub-meta-item"><span class="sub-meta-dot"></span> CBSE BOARDS 2027</span>
+            <span class="sub-meta-item"><span class="sub-meta-dot"></span> JEE MAIN 2027</span>
+            <span class="sub-meta-item"><span class="sub-meta-dot"></span> NDA 2 2026</span>
+          </div>
+        </header>
+
+        <!-- SLEEP REPAIR PHASE TRACKER -->
+        <section class="sleep-card">
+          <div class="sleep-header">
+            <div class="sleep-title"><span>😴 SLEEP REPAIR PHASE TRACKER</span></div>
+            <div class="sleep-select-wrapper">
+              <label for="sleep-phase-select" class="sleep-select-label">ACTIVE PHASE:</label>
+              <select id="sleep-phase-select" class="sleep-select" aria-label="Select sleep repair phase">
+                <option value="1">Phase 1 (Weeks 1–2)</option>
+                <option value="2">Phase 2 (Weeks 3–4)</option>
+                <option value="3">Phase 3 (Weeks 5+)</option>
+              </select>
+            </div>
+          </div>
+          <div class="sleep-metrics-grid">
+            <div class="sleep-metric-tile">
+              <div class="metric-label">Post-School Nap</div>
+              <div class="metric-value" id="sleep-nap-val">25–30 min (alarm-locked)</div>
+            </div>
+            <div class="sleep-metric-tile">
+              <div class="metric-label">Target Bedtime</div>
+              <div class="metric-value" id="sleep-bedtime-val">12:00–12:15 AM</div>
+            </div>
+            <div class="sleep-metric-tile">
+              <div class="metric-label">Expected Sleep Result</div>
+              <div class="metric-value" id="sleep-result-val">~5.5–6 hrs</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- INLINE LOCK TOAST BANNER -->
+        <div id="lock-toast-banner" class="lock-toast"></div>
+
+        <!-- TABS -->
+        <nav class="tabs-nav" role="tablist" aria-label="Timetable Schedule Modes">
+          <button class="tab-btn active" id="tab-school" role="tab" aria-selected="true" aria-controls="main-view-panel">🏫 School Day</button>
+          <button class="tab-btn" id="tab-holiday" role="tab" aria-selected="false" aria-controls="main-view-panel">🏠 Holiday</button>
+          <button class="tab-btn" id="tab-busy" role="tab" aria-selected="false" aria-controls="main-view-panel">⚡ Busy / Special Day</button>
+          <button class="tab-btn" id="tab-system" role="tab" aria-selected="false" aria-controls="main-view-panel">⚙️ System <span id="system-badge" class="tab-badge">0/4</span></button>
+          <button class="tab-btn" id="tab-habits" role="tab" aria-selected="false" aria-controls="main-view-panel">📈 Habits <span id="habits-badge" class="tab-badge">0/6</span></button>
+        </nav>
+
+        <!-- SUBJECT WHEEL STRIP -->
+        <div id="subject-wheel-strip" class="wheel-strip">
+          <div class="wheel-title">
+            <span>🔄 WEEKLY SUBJECT WHEEL — TODAY'S ROTATION</span>
+            <span id="wheel-day-name" style="color: var(--text-dim);">MONDAY</span>
+          </div>
+          <div class="wheel-grid">
+            <div class="wheel-item"><span>Deep Block 1 (Hardest)</span><div id="wheel-deep1-val" class="wheel-subject-highlight">Physics</div></div>
+            <div class="wheel-item"><span>Deep Block 2 (Moderate)</span><div id="wheel-deep2-val" class="wheel-subject-highlight">Maths</div></div>
+            <div class="wheel-item"><span>Light Block</span><div id="wheel-light-val" class="wheel-subject-highlight">Computer Science</div></div>
+          </div>
         </div>
-        <div class="sleep-metric-tile">
-          <div class="metric-label">Expected Sleep Result</div>
-          <div class="metric-value" id="sleep-result-val">~5.5–6 hrs</div>
+
+        <!-- OPS BAR -->
+        <div class="ops-bar" id="ops-bar-container">
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-title">CHECKLIST PROGRESS</span>
+              <span class="progress-count" id="progress-text">0 / 0 (0%)</span>
+            </div>
+            <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress-fill-bar"></div></div>
+          </div>
+          <button id="reset-checklist-btn" class="btn-reset" title="Reset checks for today&#39;s active tab">↺ Reset Today's Checklist</button>
         </div>
-      </div>
-    </section>
 
-    <!-- TABS -->
-    <nav class="tabs-nav" role="tablist" aria-label="Timetable Schedule Modes">
-      <button class="tab-btn active" id="tab-school" role="tab" aria-selected="true" aria-controls="main-view-panel">🏫 School Day</button>
-      <button class="tab-btn" id="tab-holiday" role="tab" aria-selected="false" aria-controls="main-view-panel">🏠 Holiday</button>
-      <button class="tab-btn" id="tab-busy" role="tab" aria-selected="false" aria-controls="main-view-panel">⚡ Busy / Special Day</button>
-      <button class="tab-btn" id="tab-system" role="tab" aria-selected="false" aria-controls="main-view-panel">⚙️ System <span id="system-badge" class="tab-badge">0/4</span></button>
-      <button class="tab-btn" id="tab-habits" role="tab" aria-selected="false" aria-controls="main-view-panel">📈 Habits <span id="habits-badge" class="tab-badge">0/6</span></button>
-    </nav>
+        <!-- MAIN VIEW -->
+        <main id="main-view-panel" role="tabpanel" tabindex="0">
 
-    <!-- SUBJECT WHEEL STRIP -->
-    <div id="subject-wheel-strip" class="wheel-strip">
-      <div class="wheel-title">
-        <span>🔄 WEEKLY SUBJECT WHEEL — TODAY'S ROTATION</span>
-        <span id="wheel-day-name" style="color: var(--text-dim);">MONDAY</span>
-      </div>
-      <div class="wheel-grid">
-        <div class="wheel-item"><span>Deep Block 1 (Hardest)</span><div id="wheel-deep1-val" class="wheel-subject-highlight">Physics</div></div>
-        <div class="wheel-item"><span>Deep Block 2 (Moderate)</span><div id="wheel-deep2-val" class="wheel-subject-highlight">Maths</div></div>
-        <div class="wheel-item"><span>Light Block</span><div id="wheel-light-val" class="wheel-subject-highlight">Computer Science</div></div>
-      </div>
-    </div>
+          <!-- UNSELECTED PROMPT -->
+          <div id="unselected-prompt-container" class="unselected-prompt-card" style="display: none;">
+            <span class="unselected-prompt-icon">🔒</span>
+            <span id="unselected-prompt-text">Pick today's day type on the left to open your timetable.</span>
+          </div>
 
-    <!-- OPS BAR -->
-    <div class="ops-bar" id="ops-bar-container">
-      <div class="progress-section">
-        <div class="progress-header">
-          <span class="progress-title">CHECKLIST PROGRESS</span>
-          <span class="progress-count" id="progress-text">0 / 0 (0%)</span>
-        </div>
-        <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress-fill-bar"></div></div>
-      </div>
-      <button id="reset-checklist-btn" class="btn-reset" title="Reset checks for today&#39;s active tab">↺ Reset Today's Checklist</button>
-    </div>
-
-    <!-- MAIN VIEW -->
-    <main id="main-view-panel" role="tabpanel" tabindex="0">
-
-      <!-- DAILY TIMELINE -->
-      <div class="timeline-container" id="blocks-container"></div>
+          <!-- DAILY TIMELINE -->
+          <div class="timeline-container" id="blocks-container"></div>
 
       <!-- SYSTEM TAB -->
       <div id="system-view-container" style="display: none;">
@@ -567,6 +640,9 @@
       </div>
 
     </main>
+
+    </div> <!-- end .main-column -->
+    </div> <!-- end .app-layout -->
 
     <footer class="app-footer">
       <div>OPS LOG :: ADAPTIVE TIMETABLE SYSTEM</div>

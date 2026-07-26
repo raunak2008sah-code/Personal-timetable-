@@ -194,7 +194,8 @@ function parseStorageKey(key) {
       "weekly-review": "weeklyReview",
       "habits": "habits",
       "syllabus": "syllabus",
-      "monthly-reflection": "monthlyReflection"
+      "monthly-reflection": "monthlyReflection",
+      "day-type": "dayType"
     };
     if (collMap[prefix]) {
       return { coll: collMap[prefix], docId: suffix };
@@ -369,6 +370,24 @@ function setupRealtimeListeners() {
       }
     }
   }));
+
+  // Listen to today's day-type lock
+  const dayTypeRef = doc(db, "users", syncCode, "dayType", STATE.dateStr);
+  activeListeners.push(onSnapshot(dayTypeRef, (snap) => {
+    if (snap.exists() && snap.metadata.hasPendingWrites === false) {
+      const val = snap.data().value;
+      if (val && ["school", "holiday", "busy"].includes(val)) {
+        if (STATE.dayType !== val) {
+          STATE.dayType = val;
+          if (["school", "holiday", "busy"].includes(STATE.activeTab)) {
+            STATE.activeTab = val;
+          }
+          renderDayTypeSelectorUI();
+          renderCurrentTab();
+        }
+      }
+    }
+  }));
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -377,6 +396,7 @@ function setupRealtimeListeners() {
 
 const STATE = {
   activeTab: "school",
+  dayType: null, // "school" | "holiday" | "busy" | null
   sleepPhase: "1",
   dateStr: getTodayDateString(),
   isoWeekStr: getISOWeekString(),
@@ -476,6 +496,14 @@ async function initApp() {
   // 6. Load system & habits data
   await loadSystemTabData();
   await loadHabitHistoryData();
+
+  // 6b. Load today's day-type lock
+  const savedDayType = await StorageLayer.get(`day-type:${STATE.dateStr}`);
+  if (savedDayType && ["school", "holiday", "busy"].includes(savedDayType)) {
+    STATE.dayType = savedDayType;
+    STATE.activeTab = savedDayType;
+  }
+  renderDayTypeSelectorUI();
 
   // 7. Update UI
   updateSubjectWheelUI();
@@ -622,34 +650,127 @@ function getActiveBlocks() {
   return [];
 }
 
+async function selectDayType(mode) {
+  if (STATE.dayType !== null) return;
+  if (!["school", "holiday", "busy"].includes(mode)) return;
+
+  STATE.dayType = mode;
+  STATE.activeTab = mode;
+
+  renderDayTypeSelectorUI();
+  renderCurrentTab();
+
+  await StorageLayer.set(`day-type:${STATE.dateStr}`, mode);
+}
+
+function renderDayTypeSelectorUI() {
+  const unselectedView = document.getElementById("day-type-unselected-view");
+  const lockedView = document.getElementById("day-type-locked-view");
+  const lockedTitle = document.getElementById("day-type-locked-title");
+
+  if (!unselectedView || !lockedView) return;
+
+  if (STATE.dayType) {
+    unselectedView.style.display = "none";
+    lockedView.style.display = "block";
+
+    const labels = {
+      school: "📘 School Day",
+      holiday: "🏠 Holiday",
+      busy: "⚡ Busy / Special Day"
+    };
+    if (lockedTitle) lockedTitle.textContent = labels[STATE.dayType] || "Selected Day";
+  } else {
+    unselectedView.style.display = "block";
+    lockedView.style.display = "none";
+  }
+}
+
 function renderCurrentTab() {
   const tabs = [
-    { id: "tab-school", mode: "school" },
-    { id: "tab-holiday", mode: "holiday" },
-    { id: "tab-busy", mode: "busy" },
-    { id: "tab-system", mode: "system" },
-    { id: "tab-habits", mode: "habits" }
+    { id: "tab-school", mode: "school", label: "🏫 School Day" },
+    { id: "tab-holiday", mode: "holiday", label: "🏠 Holiday" },
+    { id: "tab-busy", mode: "busy", label: "⚡ Busy / Special Day" },
+    { id: "tab-system", mode: "system", label: "⚙️ System" },
+    { id: "tab-habits", mode: "habits", label: "📈 Habits" }
   ];
+
   tabs.forEach(tab => {
     const btn = document.getElementById(tab.id);
+    if (!btn) return;
+    const isDaily = ["school", "holiday", "busy"].includes(tab.mode);
     const isActive = tab.mode === STATE.activeTab;
+
     btn.classList.toggle("active", isActive);
     btn.setAttribute("aria-selected", isActive ? "true" : "false");
+
+    if (isDaily) {
+      const isLocked = STATE.dayType !== null;
+      const isChosen = STATE.dayType === tab.mode;
+
+      if (isLocked && !isChosen) {
+        btn.classList.add("disabled-lock");
+        btn.innerHTML = `${tab.label} <span style="font-size:11px; opacity:0.7;">🔒</span>`;
+      } else {
+        btn.classList.remove("disabled-lock");
+        btn.innerHTML = tab.label;
+      }
+    }
   });
 
   const isDaily = ["school", "holiday", "busy"].includes(STATE.activeTab);
   const isSystem = STATE.activeTab === "system";
   const isHabits = STATE.activeTab === "habits";
 
-  document.getElementById("subject-wheel-strip").style.display = (STATE.activeTab === "school") ? "block" : "none";
-  document.getElementById("ops-bar-container").style.display = isDaily ? "flex" : "none";
-  document.getElementById("blocks-container").style.display = isDaily ? "block" : "none";
-  document.getElementById("system-view-container").style.display = isSystem ? "block" : "none";
-  document.getElementById("habits-view-container").style.display = isHabits ? "block" : "none";
+  const promptContainer = document.getElementById("unselected-prompt-container");
+  const wheelStrip = document.getElementById("subject-wheel-strip");
+  const opsBar = document.getElementById("ops-bar-container");
+  const blocksContainer = document.getElementById("blocks-container");
+  const systemContainer = document.getElementById("system-view-container");
+  const habitsContainer = document.getElementById("habits-view-container");
 
-  if (isDaily) renderDailyTimeline();
-  else if (isSystem) renderSystemTabSections();
-  else if (isHabits) renderHabitsTabSections();
+  if (isDaily) {
+    if (STATE.dayType === null) {
+      if (promptContainer) promptContainer.style.display = "block";
+      if (wheelStrip) wheelStrip.style.display = "none";
+      if (opsBar) opsBar.style.display = "none";
+      if (blocksContainer) blocksContainer.style.display = "none";
+      if (systemContainer) systemContainer.style.display = "none";
+      if (habitsContainer) habitsContainer.style.display = "none";
+
+      const promptText = document.getElementById("unselected-prompt-text");
+      if (promptText) {
+        const isMobile = window.innerWidth <= 768;
+        promptText.textContent = isMobile
+          ? "Pick today's day type at the top to open your timetable."
+          : "Pick today's day type on the left to open your timetable.";
+      }
+    } else {
+      if (promptContainer) promptContainer.style.display = "none";
+      if (wheelStrip) wheelStrip.style.display = (STATE.activeTab === "school") ? "block" : "none";
+      if (opsBar) opsBar.style.display = "flex";
+      if (blocksContainer) blocksContainer.style.display = "block";
+      if (systemContainer) systemContainer.style.display = "none";
+      if (habitsContainer) habitsContainer.style.display = "none";
+      renderDailyTimeline();
+    }
+  } else if (isSystem) {
+    if (promptContainer) promptContainer.style.display = "none";
+    if (wheelStrip) wheelStrip.style.display = "none";
+    if (opsBar) opsBar.style.display = "none";
+    if (blocksContainer) blocksContainer.style.display = "none";
+    if (systemContainer) systemContainer.style.display = "block";
+    if (habitsContainer) habitsContainer.style.display = "none";
+    renderSystemTabSections();
+  } else if (isHabits) {
+    if (promptContainer) promptContainer.style.display = "none";
+    if (wheelStrip) wheelStrip.style.display = "none";
+    if (opsBar) opsBar.style.display = "none";
+    if (blocksContainer) blocksContainer.style.display = "none";
+    if (systemContainer) systemContainer.style.display = "none";
+    if (habitsContainer) habitsContainer.style.display = "block";
+    renderHabitsTabSections();
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -721,7 +842,11 @@ function renderDailyTimeline() {
 
     const checkElem = document.createElement("div");
     checkElem.className = "custom-checkbox";
-    checkElem.innerHTML = `<svg class="checkmark-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    if (isDone) {
+      checkElem.style.setProperty("background-color", "#8a9a68", "important");
+      checkElem.style.setProperty("border-color", "#8a9a68", "important");
+    }
+    checkElem.innerHTML = `<svg class="checkmark-icon" style="opacity: ${isDone ? "1" : "0"} !important; stroke: #12161c !important; stroke-width: 3;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
     metaElem.appendChild(durElem);
     metaElem.appendChild(checkElem);
@@ -802,10 +927,10 @@ function renderWeeklyReset() {
     const checkElem = document.createElement("div");
     checkElem.className = "custom-checkbox";
     if (isDone) {
-      checkElem.style.backgroundColor = "var(--olive)";
-      checkElem.style.borderColor = "var(--olive)";
+      checkElem.style.setProperty("background-color", "#8a9a68", "important");
+      checkElem.style.setProperty("border-color", "#8a9a68", "important");
     }
-    checkElem.innerHTML = `<svg class="checkmark-icon" style="opacity: ${isDone ? "1" : "0"}; stroke: var(--bg);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    checkElem.innerHTML = `<svg class="checkmark-icon" style="opacity: ${isDone ? "1" : "0"} !important; stroke: #12161c !important; stroke-width: 3;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
     item.appendChild(textSpan);
     item.appendChild(checkElem);
@@ -934,10 +1059,10 @@ function renderHabitTracker() {
     const checkElem = document.createElement("div");
     checkElem.className = "custom-checkbox";
     if (isDone) {
-      checkElem.style.backgroundColor = "var(--olive)";
-      checkElem.style.borderColor = "var(--olive)";
+      checkElem.style.setProperty("background-color", "#8a9a68", "important");
+      checkElem.style.setProperty("border-color", "#8a9a68", "important");
     }
-    checkElem.innerHTML = `<svg class="checkmark-icon" style="opacity: ${isDone ? "1" : "0"}; stroke: var(--bg);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    checkElem.innerHTML = `<svg class="checkmark-icon" style="opacity: ${isDone ? "1" : "0"} !important; stroke: #12161c !important; stroke-width: 3;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
     item.appendChild(textSpan);
     item.appendChild(checkElem);
@@ -1253,7 +1378,7 @@ async function exportAllData() {
   if (exportBtn) exportBtn.textContent = "Exporting...";
 
   const allData = {};
-  const collections = ["checklists", "habits", "weeklyReset", "weeklyReview", "syllabus", "monthlyReflection", "meta"];
+  const collections = ["checklists", "habits", "weeklyReset", "weeklyReview", "syllabus", "monthlyReflection", "dayType", "meta"];
 
   if (firestoreReady && syncCode) {
     try {
@@ -1303,7 +1428,7 @@ async function importData(file) {
     const data = JSON.parse(text);
 
     if (firestoreReady && syncCode) {
-      const collections = ["checklists", "habits", "weeklyReset", "weeklyReview", "syllabus", "monthlyReflection", "meta"];
+      const collections = ["checklists", "habits", "weeklyReset", "weeklyReview", "syllabus", "monthlyReflection", "dayType", "meta"];
       for (const collName of collections) {
         if (data[collName] && typeof data[collName] === "object") {
           for (const [docId, docData] of Object.entries(data[collName])) {
@@ -1432,6 +1557,14 @@ function bindEvents() {
   }
 
   // Export / Import
+  // Day type selector buttons
+  ["school", "holiday", "busy"].forEach(mode => {
+    const btn = document.getElementById(`btn-select-${mode}`);
+    if (btn) {
+      btn.addEventListener("click", () => selectDayType(mode));
+    }
+  });
+
   const exportBtn = document.getElementById("btn-export-data");
   if (exportBtn) exportBtn.addEventListener("click", exportAllData);
 
@@ -1446,9 +1579,30 @@ function bindEvents() {
 }
 
 function switchTab(mode) {
+  const isDaily = ["school", "holiday", "busy"].includes(mode);
+
+  if (isDaily && STATE.dayType !== null && STATE.dayType !== mode) {
+    showLockToast(mode);
+    return;
+  }
+
   if (STATE.activeTab === mode) return;
   STATE.activeTab = mode;
   renderCurrentTab();
+}
+
+let lockToastTimer = null;
+function showLockToast(targetMode) {
+  const banner = document.getElementById("lock-toast-banner");
+  if (!banner) return;
+  const labels = { school: "School Day", holiday: "Holiday", busy: "Busy / Special Day" };
+  const chosenLabel = labels[STATE.dayType] || STATE.dayType;
+  banner.textContent = `Today is locked as ${chosenLabel} — resets tomorrow.`;
+  banner.style.display = "block";
+  if (lockToastTimer) clearTimeout(lockToastTimer);
+  lockToastTimer = setTimeout(() => {
+    banner.style.display = "none";
+  }, 3500);
 }
 
 /* ─────────────────────────────────────────────────────────────────
